@@ -1,5 +1,4 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -9,25 +8,53 @@ public class WorkerServer {
 
         try {
 
-            ServerSocket serverSocket = new ServerSocket(5000);
+            if (args.length == 0) {
+                System.out.println("Please provide port number.");
+                return;
+            }
 
-            System.out.println("Worker listening on port 5000...");
+            int port = Integer.parseInt(args[0]);
 
-            Socket socket = serverSocket.accept();
+            ServerSocket serverSocket = new ServerSocket(port);
 
-            System.out.println("Master connected!");
+            System.out.println("Worker listening on port " + port);
 
-            BufferedReader reader =
-                    new BufferedReader(
-                            new InputStreamReader(socket.getInputStream()));
+            while (true) {
 
-            String message = reader.readLine();
+                Socket socket = serverSocket.accept();
 
-            System.out.println("Received: " + message);
+                System.out.println("Master connected!");
 
-            reader.close();
-            socket.close();
-            serverSocket.close();
+                BufferedReader reader =
+                        new BufferedReader(
+                                new InputStreamReader(socket.getInputStream()));
+
+                PrintWriter writer =
+                        new PrintWriter(socket.getOutputStream(), true);
+
+                String message = reader.readLine();
+
+                System.out.println("Received: " + message);
+
+                String[] parts = message.split(" ");
+
+                int start = Integer.parseInt(parts[1]);
+                int end = Integer.parseInt(parts[2]);
+
+                int sum = 0;
+
+                for (int i = start; i <= end; i++) {
+                    sum += i;
+                }
+
+                System.out.println("Calculated Result: " + sum);
+
+                writer.println(sum);
+
+                reader.close();
+                writer.close();
+                socket.close();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
