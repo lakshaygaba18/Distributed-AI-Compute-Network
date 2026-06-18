@@ -15,9 +15,48 @@ public class WorkerServer {
 
             int port = Integer.parseInt(args[0]);
 
+            Socket registrySocket = new Socket("localhost", 9000);
+
+            PrintWriter registryWriter =
+                    new PrintWriter(
+                            registrySocket.getOutputStream(),
+                            true);
+
+            registryWriter.println("REGISTER " + port);
+
+            registryWriter.close();
+            registrySocket.close();
             ServerSocket serverSocket = new ServerSocket(port);
 
             System.out.println("Worker listening on port " + port);
+            new Thread(() -> {
+
+                while (true) {
+
+                    try {
+
+                        Socket heartbeatSocket =
+                                new Socket("localhost", 9000);
+
+                        PrintWriter heartbeatWriter =
+                                new PrintWriter(
+                                        heartbeatSocket.getOutputStream(),
+                                        true);
+
+                        heartbeatWriter.println(
+                                "HEARTBEAT " + port);
+
+                        heartbeatWriter.close();
+                        heartbeatSocket.close();
+
+                        Thread.sleep(5000);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }).start();
 
             while (true) {
 
