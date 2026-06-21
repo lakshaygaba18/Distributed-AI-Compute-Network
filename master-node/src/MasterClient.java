@@ -31,10 +31,15 @@ public class MasterClient {
             registryWriter.close();
             registrySocket.close();
 
-            System.out.println("Workers Found: " + response);
+            System.out.println(
+                    "Workers Found: " + response);
 
-            if (response == null || response.equals("[]")) {
-                System.out.println("No workers available.");
+            if (response == null ||
+                    response.equals("[]")) {
+
+                System.out.println(
+                        "No workers available.");
+
                 return;
             }
 
@@ -44,17 +49,32 @@ public class MasterClient {
             String[] workerPorts =
                     response.split(",");
 
-            String[] tasks = {
-                    "SUM 1 100",
-                    "SUM 1 10",
-                    "SUM 1 5",
-                    "SUM 1 20",
-                    "SUM 1 50"
-            };
+            // Add tasks to queue
+
+            TaskProducer.addTasks();
+
+            System.out.println(
+                    "Total Tasks In Queue: "
+                            + TaskQueue.size());
+
+            TaskQueue.printQueue();
 
             int workerIndex = 0;
 
-            for (String task : tasks) {
+            while (true) {
+
+                String task =
+                        TaskConsumer.getNextTask();
+                if (task == null ||
+                        task.equals("NO_TASK")) {
+
+                    System.out.println(
+                            "No more tasks in queue.");
+
+                    break;
+                }
+
+                QueueMonitor.printStatus();
 
                 boolean completed = false;
                 int attempts = 0;
@@ -64,12 +84,15 @@ public class MasterClient {
 
                     int port =
                             Integer.parseInt(
-                                    workerPorts[workerIndex].trim());
+                                    workerPorts[workerIndex]
+                                            .trim());
 
                     try {
 
                         Socket socket =
-                                new Socket("localhost", port);
+                                new Socket(
+                                        "localhost",
+                                        port);
 
                         PrintWriter writer =
                                 new PrintWriter(
@@ -102,12 +125,14 @@ public class MasterClient {
 
                         System.out.println(
                                 "Worker " + port +
-                                        " failed. Trying next worker...");
+                                        " failed. Trying next worker..."
+                        );
 
                         workerIndex++;
 
                         if (workerIndex ==
                                 workerPorts.length) {
+
                             workerIndex = 0;
                         }
 
@@ -116,6 +141,7 @@ public class MasterClient {
                 }
 
                 if (!completed) {
+
                     System.out.println(
                             "Task failed: " + task);
                 }
@@ -124,11 +150,13 @@ public class MasterClient {
 
                 if (workerIndex ==
                         workerPorts.length) {
+
                     workerIndex = 0;
                 }
             }
 
         } catch (Exception e) {
+
             e.printStackTrace();
         }
     }
