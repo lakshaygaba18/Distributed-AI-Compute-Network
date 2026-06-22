@@ -120,6 +120,18 @@ public class MasterClient {
                         socket.close();
 
                         completed = true;
+                        Socket ackSocket =
+                                new Socket("localhost", 8000);
+
+                        PrintWriter ackWriter =
+                                new PrintWriter(
+                                        ackSocket.getOutputStream(),
+                                        true);
+
+                        ackWriter.println("ACK " + task);
+
+                        ackWriter.close();
+                        ackSocket.close();
 
                     } catch (Exception e) {
 

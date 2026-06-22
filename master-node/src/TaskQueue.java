@@ -2,6 +2,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class TaskQueue {
+    private static final Queue<String> processingQueue =
+            new LinkedList<>();
 
     private static final Queue<String> queue =
             new LinkedList<>();
@@ -17,9 +19,24 @@ public class TaskQueue {
 
     public static synchronized String getTask() {
 
-        return queue.poll();
-    }
+        String task = queue.poll();
 
+        if (task != null) {
+
+            processingQueue.add(task);
+        }
+
+        return task;
+    }
+    public static synchronized void acknowledgeTask(
+            String task) {
+
+        processingQueue.remove(task);
+
+        System.out.println(
+                "Removed From Processing Queue: "
+                        + task);
+    }
     public static synchronized int size() {
 
         return queue.size();

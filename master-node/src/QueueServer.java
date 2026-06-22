@@ -3,12 +3,36 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.File;
+import java.util.Scanner;
+import java.io.FileWriter;
 
 public class QueueServer {
 
     public static void main(String[] args) {
 
         try {
+
+            File file = new File("tasks.txt");
+
+            if (file.exists()) {
+
+                Scanner scanner =
+                        new Scanner(file);
+
+                while (scanner.hasNextLine()) {
+
+                    String task =
+                            scanner.nextLine();
+
+                    TaskQueue.addTask(task);
+                }
+
+                scanner.close();
+
+                System.out.println(
+                        "Recovered Tasks From File");
+            }
 
             ServerSocket serverSocket =
                     new ServerSocket(8000);
@@ -36,17 +60,27 @@ public class QueueServer {
 
                 if (message.startsWith("ADD")) {
 
-
                     String task =
                             message.substring(4);
 
                     TaskQueue.addTask(task);
 
+                    FileWriter fileWriter =
+                            new FileWriter(
+                                    "tasks.txt",
+                                    true);
+
+                    fileWriter.write(task + "\n");
+
+                    fileWriter.close();
+
                     writer.println("TASK_ADDED");
                 }
+
                 else if (message.equals("GET")) {
 
-                    String task = TaskQueue.getTask();
+                    String task =
+                            TaskQueue.getTask();
 
                     if (task == null) {
 
@@ -58,11 +92,33 @@ public class QueueServer {
                     }
                 }
 
+                else if (message.equals("SIZE")) {
+
+                    writer.println(
+                            TaskQueue.size());
+                }
+
+                else if (message.startsWith("ACK")) {
+
+                    String task =
+                            message.substring(4);
+
+                    TaskQueue.acknowledgeTask(task);
+
+                    System.out.println(
+                            "Acknowledged: " + task);
+
+                    System.out.println(
+                            "Queue Size: "
+                                    + TaskQueue.size());
+
+                    writer.println(
+                            "ACK_RECEIVED");
+                }
                 socket.close();
             }
-        }
 
-        catch (Exception e) {
+        } catch (Exception e) {
 
             e.printStackTrace();
         }
